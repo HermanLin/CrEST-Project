@@ -1,4 +1,6 @@
 // herman was here
+//hi
+
 #include <SPI.h>
 #include <MFRC522.h>
  
