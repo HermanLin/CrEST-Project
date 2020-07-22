@@ -80,7 +80,7 @@ void loop()
     Serial.print("Balance");
     Serial.println(balance);
   }
-  writeblock(block,content);
+  writeBlock(block,content);
   
 //  //Show UID on serial monitor
 //  Serial.print("UID tag :");
