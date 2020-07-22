@@ -34,7 +34,11 @@ int writeBlock(int blockNumber, byte arrayAddress[])
   //this makes sure that we only write into data blocks. Every 4th block is a trailer block for the access/security info.
   int largestModulo4Number=blockNumber/4*4;
   int trailerBlock=largestModulo4Number+3;//determine trailer block for the sector
-  if (blockNumber > 2 && (blockNumber+1)%4 == 0){Serial.print(blockNumber);Serial.println(" is a trailer block:");return 2;}//block number is a trailer block (modulo 4); quit and send error code 2
+  if (blockNumber > 2 && (blockNumber+1)%4 == 0) { // block number is a trailer block (modulo 4); quit and send error code 2
+    Serial.print(blockNumber);
+    Serial.println(" is a trailer block:");
+    return 2;
+  } 
   Serial.print(blockNumber);
   Serial.println(" is a data block:");
   
@@ -51,6 +55,15 @@ int writeBlock(int blockNumber, byte arrayAddress[])
          Serial.println(mfrc522.GetStatusCodeName(status));
          return 3;//return "3" as error message
   }
+  //writing the block 
+  status = mfrc522.MIFARE_Write(blockNumber, arrayAddress, 16);
+  //status = mfrc522.MIFARE_Write(9, value1Block, 16);
+  if (status != MFRC522::STATUS_OK) {
+           Serial.print("MIFARE_Write() failed: ");
+           Serial.println(mfrc522.GetStatusCodeName(status));
+           return 4;//return "4" as error message
+  }
+  Serial.println("block was written");
 }
 
 void loop() 
