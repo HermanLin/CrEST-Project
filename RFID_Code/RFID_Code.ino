@@ -8,21 +8,21 @@
 #define greenPin 3
 
 //float balance = 50;
-//float fare = 2.75;
 //int newBalance = balance - fare;
 //int block = 4;
 //int row = 5;
 
+float fare = 2.75;
 bool foundCard = false;
 
-String cards[] = {"C0 43 48 32", "67 3A B7 60"};
+String cards[] = {"C0 43 48 32", "67 3A B7 60", "22 76 48 34"};
+int numCards = 3;
 
 byte custom_UID[16] = {"SmartScan"}; 
-//byte money [16] = {"Balance: $60"};
-byte money[16] = {12, 50}; // {dollars, cents} stored on block 5
+byte readUID[18];
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   
-MFRC522 :: MIFARE_Key key ;
+MFRC522::MIFARE_Key key;
  
 void setup() {
   Serial.begin(9600);   
@@ -34,6 +34,74 @@ void setup() {
   pinMode(bluePin,OUTPUT);
   pinMode(greenPin,OUTPUT);
   for(byte i = 0; i< 6; i++) key.keyByte[i]= 0xFF;
+}
+
+void loop() 
+{
+  // Look for new cards
+  if ( ! mfrc522.PICC_IsNewCardPresent()) {
+    return;
+  }
+  // Select one of the cards
+  if ( ! mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  /* DEV CODE */
+//  writeBlock(4, custom_UID);
+  /* END DEV CODE */
+
+  readBlock(4, readUID);
+  dump_byte_array(readUID, 9);
+
+//  //Show UID on serial monitor
+//  Serial.print("UID tag :");
+//  String content= "";
+//  byte letter;
+//  for (byte i = 0; i < mfrc522.uid.size; i++) 
+//  {
+//     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+//     Serial.print(mfrc522.uid.uidByte[i], HEX);
+//     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+//     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+//  }
+//  Serial.println();
+//  Serial.print("Message : ");
+//  content.toUpperCase();
+//  
+//  for(int i = 0; i < 2; i++) {
+////    digitalRead(cards[i]);
+//    if (content == cards[i]) {
+//      foundCard = true;
+//      break;
+//    }
+//  }
+//
+//  if (!foundCard) { // if a card was not found, restart void loop()
+//    return;
+//  }
+//  
+//  if (content.substring(1) == cards[i]){
+//    Serial.println("Authorized access");
+//    Serial.print("Balance: $");
+//    Serial.println(newBalance); 
+//    setColor(0,255,0); //green
+//    delay(1000);    
+//    setColor(0,0,0);
+//  }
+//  else if(balance < fare) {
+//    setColor(255,0,0); // red 
+//    Serial.print("Insufficient Balance");
+//    setColor(0,0,0);
+//  }
+//  else {
+//    setColor(255,255,0); //yellow 
+//    Serial.print("Please use an authorized card");
+//    delay(1000);
+//    setColor(0,0,0);
+//  }
+//
+//  foundCard = false;
 }
 
 int writeBlock(int blockNumber, byte arrayAddress[]) {
@@ -109,69 +177,17 @@ void setColor (int redValue, int greenValue, int blueValue){
   analogWrite(bluePin,blueValue);
 }
 
-void loop() 
-{
-  // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    return;
+boolean check_uid(byte arr_a[], byte arr_b[]) {
+  for (int i = 0; i < 9; i++) {
+    if (arr_a[i] != arr_b[i]) return false;
   }
-  // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial()) {
-    return;
+  return true;
+}
+
+void dump_byte_array(byte *buffer, byte bufferSize) {
+  for (byte i = 0; i < bufferSize; i++) {
+    Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    Serial.print(buffer[i], HEX);
   }
-
-  /* DEV CODE */
-  writeBlock(4, custom_UID);
-  writeBlock(5, money);
-  /* END DEV CODE */
-
-//  //Show UID on serial monitor
-//  Serial.print("UID tag :");
-//  String content= "";
-//  byte letter;
-//  for (byte i = 0; i < mfrc522.uid.size; i++) 
-//  {
-//     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-//     Serial.print(mfrc522.uid.uidByte[i], HEX);
-//     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-//     content.concat(String(mfrc522.uid.uidByte[i], HEX));
-//  }
-//  Serial.println();
-//  Serial.print("Message : ");
-//  content.toUpperCase();
-//  
-//  for(int i = 0; i < 2; i++) {
-////    digitalRead(cards[i]);
-//    if (content == cards[i]) {
-//      foundCard = true;
-//      break;
-//    }
-//  }
-//
-//  if (!foundCard) { // if a card was not found, restart void loop()
-//    return;
-//  }
-//  
-//  if (content.substring(1) == cards[i]){
-//    Serial.println("Authorized access");
-//    Serial.print("Balance: $");
-//    Serial.println(newBalance); 
-//    setColor(0,255,0); //green
-//    delay(1000);    
-//    setColor(0,0,0);
-//  }
-//  else if(balance < fare) {
-//    setColor(255,0,0); // red 
-//    Serial.print("Insufficient Balance");
-//    setColor(0,0,0);
-//  }
-//  else {
-//    setColor(255,255,0); //yellow 
-//    Serial.print("Please use an authorized card");
-//    delay(1000);
-//    setColor(0,0,0);
-//  }
-//
-//  foundCard = false;
 }
     
