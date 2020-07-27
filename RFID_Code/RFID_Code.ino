@@ -7,21 +7,24 @@
 #define bluePin 5
 #define greenPin 3
 
-float balance = 50 ;
-float fare = 2.75 ;
-int newBalance = balance - fare ;
-int block = 4;
-int row = 5;
-int cards[] ={"C0 43 48 32","67 3A B7 60",};
-byte content[16] = {"SmartScan"}; 
-byte money [16] = {"Balance: $60"};
+//float balance = 50;
+//float fare = 2.75;
+//int newBalance = balance - fare;
+//int block = 4;
+//int row = 5;
 
+bool foundCard = false;
+
+String cards[] = {"C0 43 48 32", "67 3A B7 60"};
+
+byte custom_UID[16] = {"SmartScan"}; 
+//byte money [16] = {"Balance: $60"};
+byte money[16] = {12, 50}; // {dollars, cents} stored on block 5
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   
 MFRC522 :: MIFARE_Key key ;
  
-void setup() 
-{
+void setup() {
   Serial.begin(9600);   
   SPI.begin();      // Initiate  SPI bus
   mfrc522.PCD_Init();   // Initiate MFRC522
@@ -33,8 +36,7 @@ void setup()
   for(byte i = 0; i< 6; i++) key.keyByte[i]= 0xFF;
 }
 
-int writeBlock(int blockNumber, byte arrayAddress[]) 
-{
+int writeBlock(int blockNumber, byte arrayAddress[]) {
   //this makes sure that we only write into data blocks. Every 4th block is a trailer block for the access/security info.
   int largestModulo4Number=blockNumber/4*4;
   int trailerBlock=largestModulo4Number+3;//determine trailer block for the sector
@@ -70,8 +72,7 @@ int writeBlock(int blockNumber, byte arrayAddress[])
   Serial.println("block was written");
 }
 
-int readBlock(int blockNumber, byte arrayAddress[]) 
-{
+int readBlock(int blockNumber, byte arrayAddress[]) {
   int largestModulo4Number=blockNumber/4*4;
   int trailerBlock=largestModulo4Number+3;//determine trailer block for the sector
 
@@ -91,78 +92,86 @@ int readBlock(int blockNumber, byte arrayAddress[])
   //it appears the authentication needs to be made before every block read/write within a specific sector.
   //If a different sector is being authenticated access to the previous one is lost.
 
-
-  /*****************************************reading a block***********************************************************/
-        
+  /*****************************************reading a block***********************************************************/  
   byte buffersize = 18;//we need to define a variable with the read buffer size, since the MIFARE_Read method below needs a pointer to the variable that contains the size... 
   status = mfrc522.MIFARE_Read(blockNumber, arrayAddress, &buffersize);//&buffersize is a pointer to the buffersize variable; MIFARE_Read requires a pointer instead of just a number
   if (status != MFRC522::STATUS_OK) {
-          Serial.print("MIFARE_read() failed: ");
-          Serial.println(mfrc522.GetStatusCodeName(status));
-          return 4;//return "4" as error message
+    Serial.print("MIFARE_read() failed: ");
+    Serial.println(mfrc522.GetStatusCodeName(status));
+    return 4;//return "4" as error message
   }
   Serial.println("block was read");
 }
 
-void setColor (int redValue ,int greenValue , int blueValue ){
-analogWrite(redPin,redValue);
-analogWrite(greenPin,greenValue);
-analogWrite(bluePin,blueValue);
-
+void setColor (int redValue, int greenValue, int blueValue){
+  analogWrite(redPin,redValue);
+  analogWrite(greenPin,greenValue);
+  analogWrite(bluePin,blueValue);
 }
 
 void loop() 
 {
   // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) 
-  {
+  if ( ! mfrc522.PICC_IsNewCardPresent()) {
     return;
   }
   // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial()) 
-  {
+  if ( ! mfrc522.PICC_ReadCardSerial()) {
     return;
   }
-  writeBlock(block,content);
-  readBlock(row,money);
 
+  /* DEV CODE */
+  writeBlock(4, custom_UID);
+  writeBlock(5, money);
+  /* END DEV CODE */
 
-  //Show UID on serial monitor
-  Serial.print("UID tag :");
-  String content= "";
-  byte letter;
-  for (byte i = 0; i < mfrc522.uid.size; i++) 
-  {
-     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-     Serial.print(mfrc522.uid.uidByte[i], HEX);
-     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-     content.concat(String(mfrc522.uid.uidByte[i], HEX));
-  }
-  Serial.println();
-  Serial.print("Message : ");
-  content.toUpperCase();
-  
- for( int i=0; i < 10 ; i++){
-    digitalRead(cards[i]);
-  if (content.substring(1) == cards[i]){
-    Serial.println("Authorized access");
-    Serial.print("Balance: $");
-    Serial.println(newBalance); 
-    setColor(0,255,0); //green
-    delay(1000);    
-    setColor(0,0,0);
-  }
- else if(balance < fare) {
-    setColor(255,0,0); // red 
-    Serial.print("Insufficient Balance");
-    setColor(0,0,0);
-    }
- else {
-     setColor(255,255,0); //yellow 
-    Serial.print("Please use an authorized card");
-    delay(1000);
-    setColor(0,0,0);
+//  //Show UID on serial monitor
+//  Serial.print("UID tag :");
+//  String content= "";
+//  byte letter;
+//  for (byte i = 0; i < mfrc522.uid.size; i++) 
+//  {
+//     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+//     Serial.print(mfrc522.uid.uidByte[i], HEX);
+//     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+//     content.concat(String(mfrc522.uid.uidByte[i], HEX));
+//  }
+//  Serial.println();
+//  Serial.print("Message : ");
+//  content.toUpperCase();
+//  
+//  for(int i = 0; i < 2; i++) {
+////    digitalRead(cards[i]);
+//    if (content == cards[i]) {
+//      foundCard = true;
+//      break;
+//    }
+//  }
+//
+//  if (!foundCard) { // if a card was not found, restart void loop()
+//    return;
+//  }
+//  
+//  if (content.substring(1) == cards[i]){
+//    Serial.println("Authorized access");
+//    Serial.print("Balance: $");
+//    Serial.println(newBalance); 
+//    setColor(0,255,0); //green
+//    delay(1000);    
+//    setColor(0,0,0);
+//  }
+//  else if(balance < fare) {
+//    setColor(255,0,0); // red 
+//    Serial.print("Insufficient Balance");
+//    setColor(0,0,0);
+//  }
+//  else {
+//    setColor(255,255,0); //yellow 
+//    Serial.print("Please use an authorized card");
+//    delay(1000);
+//    setColor(0,0,0);
+//  }
+//
+//  foundCard = false;
 }
- }
-  }
     
