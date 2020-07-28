@@ -57,15 +57,25 @@ void loop() {
   byte readCustomUID[18];
   readBlock(4, readCustomUID);
 
-  if (check_uid(readCustomUID, custom_UID)) {
-    Serial.println("yay");
-  }
-  else {
-    Serial.println("nay");
-  }
+  // check if the card scanned is a SmartScan card
+  if (checkUID(readCustomUID, custom_UID) == false) {
+    Serial.println("Not a SmartScan Card! >:(");
+    // turn LED yellow
 
-  delay(500);
-  mfrc522.PCD_StopCrypto1();
+    stopAuth();
+    return;
+  }
+  // check if the SmartScan card is in the system
+  // - if the card IS in the system, we need to keep track of its index
+  //   in order to manipulate the card's balance
+
+
+  // check if there is enough money on the card to satisfy the fare
+  // - if not, turn LED red
+  // - else, deduct the fare from the balance, turn LED green
+
+
+  stopAuth();
 }
 
 
@@ -146,14 +156,19 @@ void setColor (int redValue, int greenValue, int blueValue){
   analogWrite(bluePin,blueValue);
 }
 
-boolean check_uid(byte arr_a[], byte arr_b[]) {
+boolean checkUID(byte arr_a[], byte arr_b[]) {
   for (int i = 0; i < 9; i++) {
     if (arr_a[i] != arr_b[i]) return false;
   }
   return true;
 }
 
-void dump_byte_array(byte *buffer, byte bufferSize) {
+void stopAuth() {
+  delay(500);
+  mfrc522.PCD_StopCrypto1();
+}
+
+void dumpByteArray(byte *buffer, byte bufferSize) {
   for (byte i = 0; i < bufferSize; i++) {
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX);
