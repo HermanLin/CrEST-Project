@@ -15,11 +15,15 @@
 float fare = 2.75;
 bool foundCard = false;
 
-String cards[] = {"C0 43 48 32", "67 3A B7 60", "22 76 48 34"};
+byte cards[][4] = {
+                    {0xC0, 0x43, 0x48, 0x32}, // Daniel's
+                    {0x67, 0x3A, 0xB7, 0x60}, 
+                    {0x22, 0x76, 0x48, 0x34}  // Herman's
+                  };
 int numCards = 3;
+float balance[] = {2.75, 0, 12.5};
 
 byte custom_UID[16] = {"SmartScan"}; 
-byte readUID[18];
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   
 MFRC522::MIFARE_Key key;
@@ -33,11 +37,10 @@ void setup() {
   pinMode(redPin,OUTPUT);
   pinMode(bluePin,OUTPUT);
   pinMode(greenPin,OUTPUT);
-  for(byte i = 0; i< 6; i++) key.keyByte[i]= 0xFF;
+  for(byte i = 0; i < 6; i++) key.keyByte[i]= 0xFF;
 }
 
-void loop() 
-{
+void loop() {
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
     return;
@@ -51,58 +54,24 @@ void loop()
 //  writeBlock(4, custom_UID);
   /* END DEV CODE */
 
-  readBlock(4, readUID);
-  dump_byte_array(readUID, 9);
+  byte readCustomUID[18];
+  readBlock(4, readCustomUID);
 
-//  //Show UID on serial monitor
-//  Serial.print("UID tag :");
-//  String content= "";
-//  byte letter;
-//  for (byte i = 0; i < mfrc522.uid.size; i++) 
-//  {
-//     Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-//     Serial.print(mfrc522.uid.uidByte[i], HEX);
-//     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-//     content.concat(String(mfrc522.uid.uidByte[i], HEX));
-//  }
-//  Serial.println();
-//  Serial.print("Message : ");
-//  content.toUpperCase();
-//  
-//  for(int i = 0; i < 2; i++) {
-////    digitalRead(cards[i]);
-//    if (content == cards[i]) {
-//      foundCard = true;
-//      break;
-//    }
-//  }
-//
-//  if (!foundCard) { // if a card was not found, restart void loop()
-//    return;
-//  }
-//  
-//  if (content.substring(1) == cards[i]){
-//    Serial.println("Authorized access");
-//    Serial.print("Balance: $");
-//    Serial.println(newBalance); 
-//    setColor(0,255,0); //green
-//    delay(1000);    
-//    setColor(0,0,0);
-//  }
-//  else if(balance < fare) {
-//    setColor(255,0,0); // red 
-//    Serial.print("Insufficient Balance");
-//    setColor(0,0,0);
-//  }
-//  else {
-//    setColor(255,255,0); //yellow 
-//    Serial.print("Please use an authorized card");
-//    delay(1000);
-//    setColor(0,0,0);
-//  }
-//
-//  foundCard = false;
+  if (check_uid(readCustomUID, custom_UID)) {
+    Serial.println("yay");
+  }
+  else {
+    Serial.println("nay");
+  }
+
+  delay(500);
+  mfrc522.PCD_StopCrypto1();
 }
+
+
+/*******************************************************************************
+ ============================= OTHER FUNCTIONS =================================
+ *******************************************************************************/
 
 int writeBlock(int blockNumber, byte arrayAddress[]) {
   //this makes sure that we only write into data blocks. Every 4th block is a trailer block for the access/security info.
