@@ -7,11 +7,6 @@
 #define bluePin 5
 #define greenPin 3
 
-//float balance = 50;
-//int newBalance = balance - fare;
-//int block = 4;
-//int row = 5;
-
 float fare = 2.75;
 bool foundCard = false;
 
@@ -21,6 +16,9 @@ byte cards[][4] = {
                     {0x22, 0x76, 0x48, 0x34}  // Herman's
                   };
 int numCards = 3;
+//int len =
+
+
 float balance[] = {2.75, 0, 12.5};
 
 byte custom_UID[16] = {"SmartScan"}; 
@@ -58,23 +56,43 @@ void loop() {
   readBlock(4, readCustomUID);
 
   // check if the card scanned is a SmartScan card
-  if (checkUID(readCustomUID, custom_UID) == false) {
+  if (checkUID(readCustomUID,custom_UID,9) == false) {
     Serial.println("Not a SmartScan Card! >:(");
     // turn LED yellow
-
+    blinkColor(255,255,0);
     stopAuth();
     return;
   }
   // check if the SmartScan card is in the system
   // - if the card IS in the system, we need to keep track of its index
   //   in order to manipulate the card's balance
-
+ if (!foundCard){
+      Serial.print(balance[2]) ;
+ stopAuth();
+ return;
+  }
+  else{
+    Serial.println("Card is not in system");
+    stopAuth();
+    return;
+    }
 
   // check if there is enough money on the card to satisfy the fare
   // - if not, turn LED red
   // - else, deduct the fare from the balance, turn LED green
-
-
+  
+  if(balance[2] >= fare){
+  Serial.print("GO");
+  blinkColor(0,255,0); //  LED turns green
+  balance = balance[2] - fare ;                         //deduct fare from balance 
+  Serial.print("New Balance: $ ");      
+  Serial.print(balance);                               // read function           
+  }
+  else{
+    //LED turns red
+     Serial.print("insufficient balance");
+    blinkColor(255,0,0);
+      }
   stopAuth();
 }
 
@@ -150,14 +168,18 @@ int readBlock(int blockNumber, byte arrayAddress[]) {
   Serial.println("block was read");
 }
 
-void setColor (int redValue, int greenValue, int blueValue){
+void blinkColor (int redValue, int greenValue, int blueValue){
   analogWrite(redPin,redValue);
   analogWrite(greenPin,greenValue);
   analogWrite(bluePin,blueValue);
+  delay(750);
+  analogWrite(redPin,0);
+  analogWrite(greenPin,0);
+  analogWrite(bluePin,0); 
 }
 
-boolean checkUID(byte arr_a[], byte arr_b[]) {
-  for (int i = 0; i < 9; i++) {
+boolean checkUID(byte arr_a[], byte arr_b[],int len) {
+  for (int i = 0; i < len; i++) {
     if (arr_a[i] != arr_b[i]) return false;
   }
   return true;
@@ -174,4 +196,3 @@ void dumpByteArray(byte *buffer, byte bufferSize) {
     Serial.print(buffer[i], HEX);
   }
 }
-    
